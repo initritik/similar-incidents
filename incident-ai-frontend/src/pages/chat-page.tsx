@@ -17,20 +17,32 @@ interface AssistantResponse {
   incidents: SimilarIncident[];
 }
 
+// Premium chat page component - the main AI assistant interface.
+//
+// Architecture:
+// - Full-screen layout with sidebar + chat area
+// - Manages conversation state and API orchestration
+// - Handles message persistence via localStorage
+// - Coordinates ChatContainer + ChatInput components
+// - Integrates backend semantic search results
+//
+// Design patterns:
+// - Modular component composition
+// - Clean separation of concerns
+// - Type-safe API integration
+// - Graceful error handling
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessageProps[]>([]);
   const [assistantResponses, setAssistantResponses] = useState<AssistantResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load chat from localStorage on component mount
-  // This restores the previous conversation if the page is refreshed
+  // Load persisted chat from localStorage on mount
   useEffect(() => {
     const stored = loadChatFromStorage();
 
     if (stored.length === 0) return;
 
-    // Reconstruct messages with JSX content
     const reconstructed: ChatMessageProps[] = [];
     const responses: AssistantResponse[] = [];
 
@@ -41,7 +53,6 @@ export function ChatPage() {
           content: msg.content as string,
         });
       } else {
-        // Assistant messages: reconstruct JSX from stored data
         const data = msg.content as { answerText: string; incidents: SimilarIncident[] };
         responses.push({
           answerText: data.answerText,
@@ -51,8 +62,8 @@ export function ChatPage() {
         reconstructed.push({
           role: "assistant",
           content: (
-            <div className="space-y-2">
-              <p className="text-sm leading-relaxed">{data.answerText}</p>
+            <div className="space-y-3">
+              <p className="text-sm leading-relaxed text-foreground">{data.answerText}</p>
               {data.incidents && data.incidents.length > 0 && (
                 <IncidentsPanel incidents={data.incidents} />
               )}
@@ -66,7 +77,6 @@ export function ChatPage() {
     setAssistantResponses(responses);
   }, []);
 
-  // Handle chat clearing: remove from state and localStorage
   const handleClearChat = () => {
     setMessages([]);
     setAssistantResponses([]);
@@ -74,12 +84,9 @@ export function ChatPage() {
     clearChatStorage();
   };
 
-  // Handle user message submission: call backend API and update chat state
   const handleSendMessage = async (userMessage: string) => {
-    // Clear any previous errors when user sends a new message
     setError(null);
 
-    // Add user message to chat immediately for instant feedback
     const userMsg: ChatMessageProps = {
       role: "user",
       content: userMessage,
@@ -89,36 +96,23 @@ export function ChatPage() {
     setIsLoading(true);
 
     try {
-      // Prepare API request: use user's message as the query
-      // Backend will embed this, search for similar incidents, and format response
       const request: ChatRequest = {
         user_query: userMessage,
-        top_k: 5, // Request top 5 similar incidents (default)
+        top_k: 5,
       };
 
-      // Call backend chat orchestration endpoint
-      // This coordinates: embed query → search → LLM format → return answer
       const response = await chatWithIncidents(request);
 
-      // Track response data for storage: keep answer text and incidents separate
-      // from the rendered JSX so we can serialize to localStorage
       const responseData: AssistantResponse = {
         answerText: response.answer,
         incidents: response.results || [],
       };
 
-      // Create assistant message with both the answer text and retrieved incidents
-      // Combining these keeps related information together and provides context
-      // to support engineers about which incidents were found
       const assistantMessage: ChatMessageProps = {
         role: "assistant",
         content: (
-          <div className="space-y-2">
-            {/* LLM-formatted answer with summary and guidance */}
-            <p className="text-sm leading-relaxed">{response.answer}</p>
-
-            {/* Retrieved similar incidents: support engineers use these to understand */}
-            {/* which existing incidents are most relevant to the user's query */}
+          <div className="space-y-3">
+            <p className="text-sm leading-relaxed text-foreground">{response.answer}</p>
             {response.results && response.results.length > 0 && (
               <IncidentsPanel incidents={response.results} />
             )}
@@ -126,69 +120,58 @@ export function ChatPage() {
         ),
       };
 
-      // Add assistant response to chat state and track the data for storage
       setMessages((prev) => [...prev, assistantMessage]);
       setAssistantResponses((prev) => [...prev, responseData]);
 
-      // Save chat to localStorage after successfully adding messages
-      // This ensures the conversation persists across page refreshes
       const updatedMessages = [...messages, userMsg, assistantMessage];
       const updatedResponses = [...assistantResponses, responseData];
       saveChatToStorage(updatedMessages, updatedResponses);
     } catch (err) {
-      // Handle errors gracefully with user-friendly messages
-      // Display error in chat so user knows what went wrong
       const errorMessage = err instanceof Error ? err.message : "An error occurred";
 
-      // Log error for debugging
       console.error("Chat API error:", errorMessage);
 
-      // Add error message to chat so user sees it
       const errorMsg: ChatMessageProps = {
         role: "assistant",
-        content: `Error: ${errorMessage}. Please try again.`,
+        content: (
+          <div className="rounded-lg border border-red-200/50 bg-red-50/20 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-400">
+            <p className="font-medium">Error</p>
+            <p className="mt-1 text-xs">{errorMessage}</p>
+          </div>
+        ),
       };
 
       setMessages((prev) => [...prev, errorMsg]);
       setError(errorMessage);
     } finally {
-      // Always clear loading state, whether request succeeded or failed
       setIsLoading(false);
     }
   };
 
-  // Chat layout: stacked container with flexible message area and fixed input
-  // This creates the classic ChatGPT-style interface where the input stays
-  // at the bottom while messages scroll above it, powered by real backend API
+  // Premium chat layout: flexbox structure with fixed input
   return (
-    <div className="flex flex-col gap-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm lg:h-[calc(100vh-12rem)]">
-      {/* Chat toolbar: clear button and status indicators */}
-      {/* Placed at top so it doesn't interfere with input but remains accessible */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Chat History
-        </p>
+    <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Chat Toolbar: Header with clear button and status */}
+      <div className="flex items-center justify-between border-b border-border bg-card/50 px-6 py-3 lg:px-12">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Conversation
+          </p>
+        </div>
         <button
           onClick={handleClearChat}
           disabled={messages.length === 0}
-          className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Clear
+          Clear Chat
         </button>
       </div>
 
-      {/* Message display area: flex-1 to fill available space, overflow-y for scrolling */}
+      {/* Message Display: Flexible scrollable container */}
       <ChatContainer messages={messages} isLoading={isLoading} />
 
-      {/* Fixed input section: always visible at bottom */}
+      {/* Chat Input: Fixed at bottom */}
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-
-      {/* Temporary error notification: removed once user sends next message */}
-      {error && (
-        <div className="border-t border-border bg-destructive/10 px-4 py-2 text-xs text-destructive">
-          {error}
-        </div>
-      )}
     </div>
   );
 }
