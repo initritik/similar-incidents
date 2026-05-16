@@ -40,7 +40,7 @@ app.add_middleware(
     # List of origins that are allowed to make cross-origin requests.
     # In development, we allow localhost:5173 (Vite dev server default port).
     # In production, this would be restricted to specific frontend domains.
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000","https://similar-incidents.vercel.app/"],
     # HTTP methods that are allowed for cross-origin requests.
     # OPTIONS is required for preflight requests; GET/POST/etc. are for actual requests.
     allow_methods=["GET", "POST", "OPTIONS"],
