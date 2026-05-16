@@ -8,9 +8,7 @@ const config = {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1280px",
-      },
+      screens: { "2xl": "1280px" },
     },
     extend: {
       colors: {
@@ -36,6 +34,25 @@ const config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["DM Sans", "system-ui", "sans-serif"],
+        serif: ["Instrument Serif", "Georgia", "serif"],
+        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+      },
+      animation: {
+        "fade-up": "fade-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        shimmer: "shimmer 1.4s ease infinite",
+      },
+      keyframes: {
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(10px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
     },
   },

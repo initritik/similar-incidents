@@ -10,37 +10,21 @@ import {
   loadChatFromStorage,
   clearChatStorage,
 } from "@/lib/chatStorage";
+import { Trash2 } from "lucide-react";
 
-// Track assistant response data separately for serialization
 interface AssistantResponse {
   answerText: string;
   incidents: SimilarIncident[];
 }
 
-// Premium chat page component - the main AI assistant interface.
-//
-// Architecture:
-// - Full-screen layout with sidebar + chat area
-// - Manages conversation state and API orchestration
-// - Handles message persistence via localStorage
-// - Coordinates ChatContainer + ChatInput components
-// - Integrates backend semantic search results
-//
-// Design patterns:
-// - Modular component composition
-// - Clean separation of concerns
-// - Type-safe API integration
-// - Graceful error handling
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessageProps[]>([]);
   const [assistantResponses, setAssistantResponses] = useState<AssistantResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load persisted chat from localStorage on mount
   useEffect(() => {
     const stored = loadChatFromStorage();
-
     if (stored.length === 0) return;
 
     const reconstructed: ChatMessageProps[] = [];
@@ -48,22 +32,17 @@ export function ChatPage() {
 
     stored.forEach((msg) => {
       if (msg.role === "user") {
-        reconstructed.push({
-          role: "user",
-          content: msg.content as string,
-        });
+        reconstructed.push({ role: "user", content: msg.content as string });
       } else {
         const data = msg.content as { answerText: string; incidents: SimilarIncident[] };
-        responses.push({
-          answerText: data.answerText,
-          incidents: data.incidents,
-        });
-
+        responses.push({ answerText: data.answerText, incidents: data.incidents });
         reconstructed.push({
           role: "assistant",
           content: (
-            <div className="space-y-3">
-              <p className="text-sm leading-relaxed text-foreground">{data.answerText}</p>
+            <div>
+              <p className="text-sm leading-relaxed text-[hsl(var(--foreground)/0.9)]">
+                {data.answerText}
+              </p>
               {data.incidents && data.incidents.length > 0 && (
                 <IncidentsPanel incidents={data.incidents} />
               )}
@@ -87,20 +66,12 @@ export function ChatPage() {
   const handleSendMessage = async (userMessage: string) => {
     setError(null);
 
-    const userMsg: ChatMessageProps = {
-      role: "user",
-      content: userMessage,
-    };
-
+    const userMsg: ChatMessageProps = { role: "user", content: userMessage };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
     try {
-      const request: ChatRequest = {
-        user_query: userMessage,
-        top_k: 5,
-      };
-
+      const request: ChatRequest = { user_query: userMessage, top_k: 5 };
       const response = await chatWithIncidents(request);
 
       const responseData: AssistantResponse = {
@@ -111,8 +82,10 @@ export function ChatPage() {
       const assistantMessage: ChatMessageProps = {
         role: "assistant",
         content: (
-          <div className="space-y-3">
-            <p className="text-sm leading-relaxed text-foreground">{response.answer}</p>
+          <div>
+            <p className="text-sm leading-relaxed text-[hsl(var(--foreground)/0.9)]">
+              {response.answer}
+            </p>
             {response.results && response.results.length > 0 && (
               <IncidentsPanel incidents={response.results} />
             )}
@@ -128,15 +101,21 @@ export function ChatPage() {
       saveChatToStorage(updatedMessages, updatedResponses);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred";
-
       console.error("Chat API error:", errorMessage);
 
       const errorMsg: ChatMessageProps = {
         role: "assistant",
         content: (
-          <div className="rounded-lg border border-red-200/50 bg-red-50/20 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-900/10 dark:text-red-400">
-            <p className="font-medium">Error</p>
-            <p className="mt-1 text-xs">{errorMessage}</p>
+          <div
+            className="rounded-xl border px-4 py-3 text-sm"
+            style={{
+              background: "hsl(350 80% 65% / 0.08)",
+              borderColor: "hsl(350 80% 65% / 0.2)",
+              color: "hsl(350 80% 72%)",
+            }}
+          >
+            <p className="font-semibold">Something went wrong</p>
+            <p className="mt-1 text-xs opacity-80">{errorMessage}</p>
           </div>
         ),
       };
@@ -148,29 +127,44 @@ export function ChatPage() {
     }
   };
 
-  // Premium chat layout: flexbox structure with fixed input
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Chat Toolbar: Header with clear button and status */}
-      <div className="flex items-center justify-between border-b border-border bg-card/50 px-6 py-3 lg:px-12">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      {/* Toolbar */}
+      <div
+        className="flex items-center justify-between border-b px-6 py-3.5 lg:px-12"
+        style={{
+          borderColor: "hsl(var(--border-subtle))",
+          background: "hsl(var(--surface-1) / 0.8)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className="h-1.5 w-1.5 rounded-full"
+            style={{
+              background: "hsl(var(--accent-teal))",
+              boxShadow: "0 0 6px hsl(var(--accent-teal) / 0.6)",
+            }}
+          />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground))]">
             Conversation
           </p>
         </div>
+
         <button
           onClick={handleClearChat}
           disabled={messages.length === 0}
-          className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[hsl(var(--muted-foreground))] transition-all duration-150 hover:bg-[hsl(var(--surface-3))] hover:text-[hsl(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-30"
         >
-          Clear Chat
+          <Trash2 size={12} strokeWidth={2} />
+          Clear
         </button>
       </div>
 
-      {/* Message Display: Flexible scrollable container */}
+      {/* Messages */}
       <ChatContainer messages={messages} isLoading={isLoading} />
 
-      {/* Chat Input: Fixed at bottom */}
+      {/* Input */}
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
     </div>
   );

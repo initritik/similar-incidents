@@ -1,100 +1,151 @@
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Hash } from "lucide-react";
 import type { SimilarIncident } from "@/types/incident";
 
 export interface IncidentCardProps {
   incident: SimilarIncident;
 }
 
-// Premium enterprise incident card component.
-//
-// Design features:
-// - Clean header with incident number and similarity score badge
-// - Semantic color-coding for similarity scores (green/blue/amber)
-// - Organized metadata grid with clear labels
-// - Collapsible resolution notes section
-// - Smooth hover transitions
-// - Premium spacing and typography
-// - Enterprise-grade visual hierarchy
 export function IncidentCard({ incident }: IncidentCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Format similarity score as percentage
   const scorePercent = Math.round(incident.similarity_score * 100);
 
-  // Color-code based on similarity threshold
-  const scoreColor =
+  const scoreStyle =
     scorePercent >= 80
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+      ? {
+          bg: "hsl(173 72% 52% / 0.12)",
+          text: "hsl(173 72% 62%)",
+          border: "hsl(173 72% 40% / 0.25)",
+        }
       : scorePercent >= 60
-        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-        : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+      ? {
+          bg: "hsl(var(--accent-violet) / 0.12)",
+          text: "hsl(var(--accent-violet))",
+          border: "hsl(var(--accent-violet) / 0.25)",
+        }
+      : {
+          bg: "hsl(38 95% 62% / 0.12)",
+          text: "hsl(38 95% 62%)",
+          border: "hsl(38 95% 40% / 0.25)",
+        };
+
+  const priorityColor =
+    incident.priority?.toLowerCase().includes("1") || incident.priority?.toLowerCase().includes("critical")
+      ? "hsl(350 80% 65%)"
+      : incident.priority?.toLowerCase().includes("2") || incident.priority?.toLowerCase().includes("high")
+      ? "hsl(38 95% 62%)"
+      : "hsl(var(--muted-foreground))";
 
   return (
-    <div className="group rounded-lg border border-border bg-card/50 p-4 transition-all hover:bg-card hover:shadow-md">
-      {/* Header: Incident Number and Similarity Score */}
+    <div
+      className="group rounded-xl border p-4 transition-all duration-200"
+      style={{
+        background: "hsl(var(--surface-1))",
+        borderColor: "hsl(var(--border))",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor =
+          "hsl(var(--border-subtle))";
+        (e.currentTarget as HTMLDivElement).style.background =
+          "hsl(var(--surface-2))";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor =
+          "hsl(var(--border))";
+        (e.currentTarget as HTMLDivElement).style.background =
+          "hsl(var(--surface-1))";
+      }}
+    >
+      {/* Header */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 space-y-1">
-          {/* Incident Number: Monospace for technical identity */}
-          <p className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {incident.incident_number}
-          </p>
-
-          {/* Short Description: Main content */}
-          <p className="line-clamp-2 text-sm font-medium text-foreground">
-            {incident.short_description}
-          </p>
+        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+          <Hash
+            size={13}
+            className="mt-0.5 flex-shrink-0 text-[hsl(var(--muted-foreground)/0.5)]"
+            strokeWidth={2}
+          />
+          <div className="min-w-0">
+            <p
+              className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                color: "hsl(var(--muted-foreground))",
+              }}
+            >
+              {incident.incident_number}
+            </p>
+            <p className="line-clamp-2 text-sm font-medium leading-snug text-[hsl(var(--foreground))]">
+              {incident.short_description}
+            </p>
+          </div>
         </div>
 
-        {/* Similarity Score Badge: Prominent and color-coded */}
+        {/* Score badge */}
         <div
-          className={`flex-shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${scoreColor}`}
+          className="flex-shrink-0 rounded-lg border px-2.5 py-1 text-xs font-semibold"
+          style={{
+            background: scoreStyle.bg,
+            color: scoreStyle.text,
+            borderColor: scoreStyle.border,
+          }}
         >
           {scorePercent}%
         </div>
       </div>
 
-      {/* Metadata Grid: Category, Priority, Assignment */}
-      <div className="mt-3 grid grid-cols-3 gap-3 border-t border-border/50 pt-3">
+      {/* Metadata */}
+      <div
+        className="mt-3.5 grid grid-cols-3 gap-3 border-t pt-3.5"
+        style={{ borderColor: "hsl(var(--border-subtle))" }}
+      >
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground)/0.5)]">
             Category
           </p>
-          <p className="mt-1 text-xs text-foreground">{incident.category}</p>
+          <p className="text-xs text-[hsl(var(--foreground)/0.8)]">{incident.category}</p>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground)/0.5)]">
             Priority
           </p>
-          <p className="mt-1 text-xs text-foreground">{incident.priority}</p>
+          <p className="text-xs font-medium" style={{ color: priorityColor }}>
+            {incident.priority}
+          </p>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground)/0.5)]">
             Assigned To
           </p>
-          <p className="mt-1 truncate text-xs text-foreground">
+          <p className="truncate text-xs text-[hsl(var(--foreground)/0.8)]">
             {incident.assignment_group}
           </p>
         </div>
       </div>
 
-      {/* Collapsible Resolution Notes */}
+      {/* Resolution notes */}
       {incident.resolution_notes && (
-        <div className="mt-3 border-t border-border/50 pt-3">
+        <div
+          className="mt-3 border-t pt-3"
+          style={{ borderColor: "hsl(var(--border-subtle))" }}
+        >
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            className="flex items-center gap-1.5 text-[11px] font-semibold transition-colors"
+            style={{ color: "hsl(var(--accent-violet))" }}
           >
             <ChevronDown
-              size={14}
-              className={`transition-transform ${isExpanded ? "rotate-180" : ""}`}
+              size={13}
+              className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
             />
             Resolution Notes
           </button>
 
           {isExpanded && (
-            <div className="mt-2 rounded bg-muted/30 p-2">
-              <p className="line-clamp-4 whitespace-pre-wrap text-xs text-muted-foreground">
+            <div
+              className="mt-2.5 animate-fade-up rounded-lg p-3"
+              style={{ background: "hsl(var(--surface-0))" }}
+            >
+              <p className="whitespace-pre-wrap text-xs leading-relaxed text-[hsl(var(--muted-foreground))]">
                 {incident.resolution_notes}
               </p>
             </div>

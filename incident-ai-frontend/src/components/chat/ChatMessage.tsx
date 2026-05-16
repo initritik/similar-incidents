@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import { Zap } from "lucide-react";
 
-// Message type discriminator: 'user' or 'assistant'
 export type MessageRole = "user" | "assistant";
 
 export interface ChatMessageProps {
@@ -8,23 +8,20 @@ export interface ChatMessageProps {
   content: string | ReactNode;
 }
 
-// Premium chat message component inspired by Claude.
-//
-// Design principles:
-// - User messages: subtle gradient background, right-aligned, rounded design
-// - Assistant messages: clean left-aligned layout with generous spacing
-// - Typography: improved readability through careful font sizing
-// - Spacing: breathing room between messages for premium feel
-// - Animations: smooth fade-in transitions (via Tailwind animation utilities)
 export function ChatMessage({ role, content }: ChatMessageProps) {
-  // Determine styling based on message role
-  const isUserMessage = role === "user";
+  const isUser = role === "user";
 
-  if (isUserMessage) {
-    // User message: right-aligned, gradient background, premium styling
+  if (isUser) {
     return (
-      <div className="flex w-full justify-end">
-        <div className="max-w-md rounded-2xl bg-blue-600 px-4 py-3 text-sm text-white shadow-sm">
+      <div className="flex animate-fade-up justify-end">
+        <div
+          className="relative max-w-[72%] rounded-2xl rounded-br-md px-4 py-3 text-sm leading-relaxed text-white shadow-lg"
+          style={{
+            background:
+              "linear-gradient(135deg, hsl(252 70% 55%) 0%, hsl(252 80% 48%) 100%)",
+            boxShadow: "0 4px 24px hsl(252 87% 60% / 0.18), 0 1px 3px hsl(252 87% 60% / 0.12)",
+          }}
+        >
           {typeof content === "string" ? (
             <p className="leading-relaxed">{content}</p>
           ) : (
@@ -35,15 +32,32 @@ export function ChatMessage({ role, content }: ChatMessageProps) {
     );
   }
 
-  // Assistant message: left-aligned, clean design, premium spacing
   return (
-    <div className="flex w-full justify-start">
-      <div className="max-w-2xl space-y-3">
-        {typeof content === "string" ? (
-          <p className="text-sm leading-relaxed text-foreground">{content}</p>
-        ) : (
-          content
-        )}
+    <div className="flex animate-fade-up items-start gap-3">
+      {/* AI avatar */}
+      <div
+        className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
+        style={{
+          background:
+            "linear-gradient(135deg, hsl(var(--accent-violet)) 0%, hsl(var(--accent-teal)) 100%)",
+          boxShadow: "0 2px 12px hsl(var(--accent-violet) / 0.25)",
+        }}
+      >
+        <Zap size={12} className="text-white" strokeWidth={2.5} />
+      </div>
+
+      {/* Message body */}
+      <div className="max-w-[85%] space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[hsl(var(--accent-violet)/0.7)]">
+          Assistant
+        </p>
+        <div className="text-sm leading-relaxed text-[hsl(var(--foreground)/0.9)]">
+          {typeof content === "string" ? (
+            <p className="leading-relaxed">{content}</p>
+          ) : (
+            content
+          )}
+        </div>
       </div>
     </div>
   );
