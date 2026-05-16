@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
 from app.api.routes.chat import router as chat_router
@@ -15,6 +16,41 @@ load_dotenv()  # Load environment variables from .env file at startup
 # between environments without editing application code.
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
+
+
+# Configure CORS (Cross-Origin Resource Sharing) to allow browser requests.
+#
+# When the frontend (running on localhost:5173) makes a POST request to the
+# backend (localhost:8000), the browser first sends an automatic OPTIONS preflight
+# request to check if the server allows cross-origin requests. This happens
+# automatically before the actual POST request is sent—it's a browser security
+# feature to prevent cross-origin attacks.
+#
+# Without CORS configuration, the backend returns 405 Method Not Allowed for
+# the OPTIONS request, and the browser blocks the subsequent POST request.
+# This appears as a network error in the frontend, even though the backend
+# endpoint is working correctly.
+#
+# CORS middleware solves this by:
+# 1. Listening for OPTIONS requests from different origins
+# 2. Responding with headers that tell the browser which methods/headers are allowed
+# 3. Allowing the subsequent actual requests (POST, GET, etc.) to proceed
+app.add_middleware(
+    CORSMiddleware,
+    # List of origins that are allowed to make cross-origin requests.
+    # In development, we allow localhost:5173 (Vite dev server default port).
+    # In production, this would be restricted to specific frontend domains.
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    # HTTP methods that are allowed for cross-origin requests.
+    # OPTIONS is required for preflight requests; GET/POST/etc. are for actual requests.
+    allow_methods=["GET", "POST", "OPTIONS"],
+    # HTTP headers that are allowed in cross-origin requests.
+    # * means allow any headers sent by the frontend.
+    allow_headers=["*"],
+    # Allow cookies/credentials to be sent with cross-origin requests.
+    # Set to False if your frontend doesn't need to send authentication cookies.
+    allow_credentials=False,
+)
 
 
 # Register route modules here so main.py stays focused on application setup.
