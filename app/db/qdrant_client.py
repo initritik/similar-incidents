@@ -3,7 +3,7 @@ from typing import Optional
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, VectorParams
 
-from config.settings import settings
+from app.config.settings import settings
 
 
 VECTOR_SIZE = 1536

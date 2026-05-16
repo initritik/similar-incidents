@@ -13,6 +13,7 @@ load_dotenv()  # Load environment variables from .env file at startup
 # This object is what Uvicorn imports and runs.
 # App metadata comes from environment-backed settings, so it can change
 # between environments without editing application code.
+
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 
 
