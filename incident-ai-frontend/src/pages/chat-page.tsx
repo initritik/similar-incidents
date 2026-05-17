@@ -6,29 +6,56 @@ import { IncidentsPanel } from "@/components/incidents/IncidentsPanel";
 import { chatWithIncidents } from "@/services/incidentApi";
 import type { ChatRequest, SimilarIncident } from "@/types/incident";
 import {
-  saveChatToStorage,
-  loadChatFromStorage,
+  loadMessagesFromSession,
+  saveMessagesToSession,
   clearChatStorage,
 } from "@/lib/chatStorage";
 import { Trash2 } from "lucide-react";
 
 interface AssistantResponse {
   answerText: string;
-  incidents: SimilarIncident[];
+  incidents:  SimilarIncident[];
 }
 
-export function ChatPage() {
-  const [messages, setMessages] = useState<ChatMessageProps[]>([]);
-  const [assistantResponses, setAssistantResponses] = useState<AssistantResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface ChatPageProps {
+  sessionId:         string;
+  onSessionUpdated?: () => void;
+}
 
+// Helper to render assistant message content as JSX
+function AssistantContent({
+  answerText,
+  incidents,
+}: {
+  answerText: string;
+  incidents:  SimilarIncident[];
+}) {
+  return (
+    <div>
+      <p className="text-sm leading-relaxed" style={{ color: "hsl(var(--rl-ink-200))" }}>
+        {answerText}
+      </p>
+      {incidents && incidents.length > 0 && <IncidentsPanel incidents={incidents} />}
+    </div>
+  );
+}
+
+export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
+  const [messages,           setMessages]           = useState<ChatMessageProps[]>([]);
+  const [assistantResponses, setAssistantResponses] = useState<AssistantResponse[]>([]);
+  const [isLoading,          setIsLoading]          = useState(false);
+
+  // Load messages whenever sessionId changes (new chat or history navigation)
   useEffect(() => {
-    const stored = loadChatFromStorage();
-    if (stored.length === 0) return;
+    const stored = loadMessagesFromSession(sessionId);
+    if (stored.length === 0) {
+      setMessages([]);
+      setAssistantResponses([]);
+      return;
+    }
 
     const reconstructed: ChatMessageProps[] = [];
-    const responses: AssistantResponse[] = [];
+    const responses: AssistantResponse[]    = [];
 
     stored.forEach((msg) => {
       if (msg.role === "user") {
@@ -37,16 +64,12 @@ export function ChatPage() {
         const data = msg.content as { answerText: string; incidents: SimilarIncident[] };
         responses.push({ answerText: data.answerText, incidents: data.incidents });
         reconstructed.push({
-          role: "assistant",
+          role:    "assistant",
           content: (
-            <div>
-              <p className="text-sm leading-relaxed text-[hsl(var(--foreground)/0.9)]">
-                {data.answerText}
-              </p>
-              {data.incidents && data.incidents.length > 0 && (
-                <IncidentsPanel incidents={data.incidents} />
-              )}
-            </div>
+            <AssistantContent
+              answerText={data.answerText}
+              incidents={data.incidents}
+            />
           ),
         });
       }
@@ -54,20 +77,19 @@ export function ChatPage() {
 
     setMessages(reconstructed);
     setAssistantResponses(responses);
-  }, []);
+  }, [sessionId]);
 
   const handleClearChat = () => {
     setMessages([]);
     setAssistantResponses([]);
-    setError(null);
     clearChatStorage();
+    onSessionUpdated?.();
   };
 
   const handleSendMessage = async (userMessage: string) => {
-    setError(null);
-
     const userMsg: ChatMessageProps = { role: "user", content: userMessage };
-    setMessages((prev) => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setIsLoading(true);
 
     try {
@@ -76,52 +98,51 @@ export function ChatPage() {
 
       const responseData: AssistantResponse = {
         answerText: response.answer,
-        incidents: response.results || [],
+        incidents:  response.results || [],
       };
 
       const assistantMessage: ChatMessageProps = {
-        role: "assistant",
+        role:    "assistant",
         content: (
-          <div>
-            <p className="text-sm leading-relaxed text-[hsl(var(--foreground)/0.9)]">
-              {response.answer}
-            </p>
-            {response.results && response.results.length > 0 && (
-              <IncidentsPanel incidents={response.results} />
-            )}
-          </div>
+          <AssistantContent
+            answerText={response.answer}
+            incidents={response.results || []}
+          />
         ),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
-      setAssistantResponses((prev) => [...prev, responseData]);
+      const updatedMessages   = [...newMessages, assistantMessage];
+      const updatedResponses  = [...assistantResponses, responseData];
 
-      const updatedMessages = [...messages, userMsg, assistantMessage];
-      const updatedResponses = [...assistantResponses, responseData];
-      saveChatToStorage(updatedMessages, updatedResponses);
+      setMessages(updatedMessages);
+      setAssistantResponses(updatedResponses);
+
+      // Persist to this session
+      saveMessagesToSession(sessionId, updatedMessages, updatedResponses);
+      onSessionUpdated?.();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred";
-      console.error("Chat API error:", errorMessage);
+      const msg = err instanceof Error ? err.message : "An error occurred";
+      console.error("Chat API error:", msg);
 
-      const errorMsg: ChatMessageProps = {
-        role: "assistant",
-        content: (
-          <div
-            className="rounded-xl border px-4 py-3 text-sm"
-            style={{
-              background: "hsl(350 80% 65% / 0.08)",
-              borderColor: "hsl(350 80% 65% / 0.2)",
-              color: "hsl(350 80% 72%)",
-            }}
-          >
-            <p className="font-semibold">Something went wrong</p>
-            <p className="mt-1 text-xs opacity-80">{errorMessage}</p>
-          </div>
-        ),
-      };
-
-      setMessages((prev) => [...prev, errorMsg]);
-      setError(errorMessage);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role:    "assistant",
+          content: (
+            <div
+              className="rounded-xl border px-4 py-3 text-sm"
+              style={{
+                background:  "hsl(350 70% 55% / 0.08)",
+                borderColor: "hsl(350 70% 55% / 0.2)",
+                color:       "hsl(350 70% 72%)",
+              }}
+            >
+              <p className="font-semibold">Something went wrong</p>
+              <p className="mt-1 text-xs opacity-80">{msg}</p>
+            </div>
+          ),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -129,24 +150,28 @@ export function ChatPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Toolbar */}
+      {/* ── Toolbar ── */}
       <div
-        className="flex items-center justify-between border-b px-6 py-3.5 lg:px-12"
+        className="flex items-center justify-between px-6 py-3.5 lg:px-12"
         style={{
-          borderColor: "hsl(var(--border-subtle))",
-          background: "hsl(var(--surface-1) / 0.8)",
+          borderBottom:  "1px solid hsl(var(--rl-ink-800))",
+          background:    "hsl(var(--rl-ink-950) / 0.85)",
           backdropFilter: "blur(8px)",
         }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          {/* Gold dot indicator */}
           <div
             className="h-1.5 w-1.5 rounded-full"
             style={{
-              background: "hsl(var(--accent-teal))",
-              boxShadow: "0 0 6px hsl(var(--accent-teal) / 0.6)",
+              background: "hsl(var(--rl-gold-400))",
+              boxShadow:  "0 0 6px hsl(var(--rl-gold-400) / 0.55)",
             }}
           />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground))]">
+          <p
+            className="text-[10px] font-semibold uppercase tracking-[0.14em]"
+            style={{ color: "hsl(var(--rl-ink-400))" }}
+          >
             Conversation
           </p>
         </div>
@@ -154,17 +179,30 @@ export function ChatPage() {
         <button
           onClick={handleClearChat}
           disabled={messages.length === 0}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-[hsl(var(--muted-foreground))] transition-all duration-150 hover:bg-[hsl(var(--surface-3))] hover:text-[hsl(var(--foreground))] disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-30"
+          style={{ color: "hsl(var(--rl-ink-500))" }}
+          onMouseEnter={(e) => {
+            if (!((e.currentTarget as HTMLButtonElement).disabled)) {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "hsl(var(--rl-ink-800))";
+              (e.currentTarget as HTMLButtonElement).style.color =
+                "hsl(var(--rl-ink-200))";
+            }
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+            (e.currentTarget as HTMLButtonElement).style.color = "hsl(var(--rl-ink-500))";
+          }}
         >
           <Trash2 size={12} strokeWidth={2} />
           Clear
         </button>
       </div>
 
-      {/* Messages */}
+      {/* ── Messages ── */}
       <ChatContainer messages={messages} isLoading={isLoading} />
 
-      {/* Input */}
+      {/* ── Input ── */}
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
     </div>
   );

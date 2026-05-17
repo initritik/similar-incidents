@@ -7,7 +7,7 @@ export interface ChatInputProps {
 }
 
 export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) {
-  const [input, setInput] = useState("");
+  const [input,     setInput]     = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
   const canSend = input.trim().length > 0 && !isLoading;
@@ -29,20 +29,23 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
 
   return (
     <div
-      className="border-t border-[hsl(var(--border-subtle))] px-6 py-5 lg:px-12"
-      style={{ background: "hsl(var(--surface-0))" }}
+      className="px-6 py-5 lg:px-12"
+      style={{
+        background:  "hsl(var(--rl-ink-950))",
+        borderTop:   "1px solid hsl(var(--rl-ink-800))",
+      }}
     >
       <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
         <div
-          className="relative rounded-2xl border transition-all duration-200"
+          className="relative rounded-2xl transition-all duration-200"
           style={{
-            background: "hsl(var(--surface-2))",
-            borderColor: isFocused
-              ? "hsl(var(--accent-violet) / 0.45)"
-              : "hsl(var(--border))",
+            background:  "hsl(var(--rl-ink-900))",
+            border:      isFocused
+              ? "1px solid hsl(var(--rl-gold-400) / 0.45)"
+              : "1px solid hsl(var(--rl-ink-700))",
             boxShadow: isFocused
-              ? "0 0 0 3px hsl(var(--accent-violet) / 0.08), 0 4px 24px hsl(var(--accent-violet) / 0.06)"
-              : "none",
+              ? "0 0 0 3px hsl(var(--rl-gold-400) / 0.07), 0 4px 20px hsl(var(--rl-ink-950) / 0.4)"
+              : "0 2px 8px hsl(var(--rl-ink-950) / 0.3)",
           }}
         >
           <textarea
@@ -57,47 +60,61 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
                 ? "Waiting for response…"
                 : "Describe an incident, paste a link, or ask a question…"
             }
-            className="w-full resize-none bg-transparent px-4 pt-4 pb-12 text-sm leading-relaxed text-[hsl(var(--foreground))] placeholder-[hsl(var(--muted-foreground)/0.5)] outline-none disabled:opacity-50"
+            className="w-full resize-none bg-transparent px-4 pt-4 pb-12 text-sm leading-relaxed outline-none disabled:opacity-50"
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              color:       "hsl(var(--rl-ink-100))",
+            }}
             rows={3}
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
           />
 
-          {/* Bottom bar inside textarea box */}
+          {/* Bottom row */}
           <div className="absolute bottom-3 left-4 right-3 flex items-center justify-between">
-            <p className="text-[11px] text-[hsl(var(--muted-foreground)/0.45)]">
+            <p
+              className="text-[11px]"
+              style={{ color: "hsl(var(--rl-ink-600))" }}
+            >
               Enter to send · Shift+Enter for newline
             </p>
 
-            {/* Send button */}
             <button
               type="submit"
               disabled={!canSend}
-              className="group flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-25"
               style={
                 canSend
                   ? {
                       background:
-                        "linear-gradient(135deg, hsl(var(--accent-violet)) 0%, hsl(252 80% 48%) 100%)",
-                      boxShadow: "0 2px 12px hsl(var(--accent-violet) / 0.3)",
+                        "linear-gradient(135deg, hsl(var(--rl-purple-950)) 0%, hsl(var(--rl-purple-800)) 100%)",
+                      border:    "1px solid hsl(var(--rl-gold-400) / 0.4)",
+                      boxShadow: "0 2px 10px hsl(var(--rl-purple-950) / 0.5)",
                     }
-                  : { background: "hsl(var(--surface-3))" }
+                  : {
+                      background: "hsl(var(--rl-ink-800))",
+                      border:     "1px solid hsl(var(--rl-ink-700))",
+                    }
               }
             >
               {isLoading ? (
-                <Loader2
-                  size={14}
-                  className="animate-spin text-[hsl(var(--muted-foreground))]"
-                />
+                <Loader2 size={13} className="animate-spin" style={{ color: "hsl(var(--rl-ink-400))" }} />
               ) : (
                 <ArrowUp
-                  size={14}
+                  size={13}
                   strokeWidth={2.5}
-                  className={canSend ? "text-white" : "text-[hsl(var(--muted-foreground))]"}
+                  style={{ color: canSend ? "hsl(var(--rl-gold-300))" : "hsl(var(--rl-ink-600))" }}
                 />
               )}
             </button>
           </div>
         </div>
+
+        {/* Disclaimer */}
+        <p
+          className="mt-2.5 text-center text-[10px]"
+          style={{ color: "hsl(var(--rl-ink-600))" }}
+        >
+          Royal London · Incident AI  ·  Responses are AI-generated and for guidance only
+        </p>
       </form>
     </div>
   );

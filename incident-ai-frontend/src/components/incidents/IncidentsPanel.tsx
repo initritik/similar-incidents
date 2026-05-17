@@ -15,47 +15,52 @@ export function IncidentsPanel({ incidents }: IncidentsPanelProps) {
 
   return (
     <div
-      className="mt-4 overflow-hidden rounded-2xl border"
+      className="mt-4 overflow-hidden rounded-2xl"
       style={{
-        background: "hsl(var(--surface-1))",
-        borderColor: "hsl(var(--border))",
+        background:  "hsl(var(--rl-ink-950))",
+        border:      "1px solid hsl(var(--rl-ink-800))",
       }}
     >
       {/* Panel header */}
       <div
-        className="flex items-center justify-between border-b px-4 py-3"
+        className="flex items-center justify-between px-4 py-3"
         style={{
-          borderColor: "hsl(var(--border-subtle))",
-          background: "hsl(var(--surface-0) / 0.5)",
+          background:   "hsl(var(--rl-purple-950) / 0.4)",
+          borderBottom: "1px solid hsl(var(--rl-ink-800))",
         }}
       >
         <div className="flex items-center gap-2.5">
           <div
             className="flex h-6 w-6 items-center justify-center rounded-md"
-            style={{ background: "hsl(var(--accent-teal) / 0.15)" }}
+            style={{ background: "hsl(var(--rl-gold-400) / 0.12)" }}
           >
-            <Layers
-              size={12}
-              strokeWidth={2}
-              style={{ color: "hsl(var(--accent-teal))" }}
-            />
+            <Layers size={12} strokeWidth={2} style={{ color: "hsl(var(--rl-gold-400))" }} />
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[hsl(var(--muted-foreground))]">
+          <p
+            className="text-[11px] font-semibold uppercase tracking-[0.1em]"
+            style={{ color: "hsl(var(--rl-ink-400))" }}
+          >
             Similar Incidents
           </p>
           <span
-            className="rounded-md px-1.5 py-0.5 text-[10px] font-semibold"
+            className="rounded-md px-2 py-0.5 text-[10px] font-semibold"
             style={{
-              background: "hsl(var(--accent-teal) / 0.12)",
-              color: "hsl(var(--accent-teal))",
+              background: "hsl(var(--rl-gold-400) / 0.12)",
+              color:      "hsl(var(--rl-gold-400))",
             }}
           >
             {incidents.length}
           </span>
         </div>
-        <p className="text-[11px] text-[hsl(var(--muted-foreground)/0.6)]">
+        <p
+          className="text-[11px]"
+          style={{ color: "hsl(var(--rl-ink-500))" }}
+        >
           Avg match{" "}
-          <span className="font-semibold text-[hsl(var(--foreground)/0.7)]">
+          <span
+            className="font-semibold"
+            style={{ color: "hsl(var(--rl-gold-400))" }}
+          >
             {Math.round(parseFloat(avgScore) * 100)}%
           </span>
         </p>

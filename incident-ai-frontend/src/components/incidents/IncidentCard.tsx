@@ -12,82 +12,69 @@ export function IncidentCard({ incident }: IncidentCardProps) {
 
   const scoreStyle =
     scorePercent >= 80
-      ? {
-          bg: "hsl(173 72% 52% / 0.12)",
-          text: "hsl(173 72% 62%)",
-          border: "hsl(173 72% 40% / 0.25)",
-        }
+      ? { bg: "hsl(160 60% 35% / 0.15)", text: "hsl(160 60% 60%)", border: "hsl(160 60% 40% / 0.25)" }
       : scorePercent >= 60
-      ? {
-          bg: "hsl(var(--accent-violet) / 0.12)",
-          text: "hsl(var(--accent-violet))",
-          border: "hsl(var(--accent-violet) / 0.25)",
-        }
-      : {
-          bg: "hsl(38 95% 62% / 0.12)",
-          text: "hsl(38 95% 62%)",
-          border: "hsl(38 95% 40% / 0.25)",
-        };
+      ? { bg: "hsl(var(--rl-gold-400) / 0.1)",  text: "hsl(var(--rl-gold-400))",  border: "hsl(var(--rl-gold-400) / 0.25)" }
+      : { bg: "hsl(350 70% 50% / 0.1)",  text: "hsl(350 70% 65%)",  border: "hsl(350 70% 50% / 0.2)"  };
 
   const priorityColor =
-    incident.priority?.toLowerCase().includes("1") || incident.priority?.toLowerCase().includes("critical")
-      ? "hsl(350 80% 65%)"
-      : incident.priority?.toLowerCase().includes("2") || incident.priority?.toLowerCase().includes("high")
-      ? "hsl(38 95% 62%)"
-      : "hsl(var(--muted-foreground))";
+    incident.priority?.match(/1|critical/i)
+      ? "hsl(350 70% 65%)"
+      : incident.priority?.match(/2|high/i)
+      ? "hsl(var(--rl-gold-400))"
+      : "hsl(var(--rl-ink-400))";
 
   return (
     <div
-      className="group rounded-xl border p-4 transition-all duration-200"
+      className="group rounded-xl p-4 transition-all duration-150"
       style={{
-        background: "hsl(var(--surface-1))",
-        borderColor: "hsl(var(--border))",
+        background:  "hsl(var(--rl-ink-900))",
+        border:      "1px solid hsl(var(--rl-ink-800))",
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.borderColor =
-          "hsl(var(--border-subtle))";
+          "hsl(var(--rl-gold-400) / 0.2)";
         (e.currentTarget as HTMLDivElement).style.background =
-          "hsl(var(--surface-2))";
+          "hsl(var(--rl-ink-800))";
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.borderColor =
-          "hsl(var(--border))";
+          "hsl(var(--rl-ink-800))";
         (e.currentTarget as HTMLDivElement).style.background =
-          "hsl(var(--surface-1))";
+          "hsl(var(--rl-ink-900))";
       }}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-start gap-2.5">
+        <div className="flex min-w-0 flex-1 items-start gap-2">
           <Hash
-            size={13}
-            className="mt-0.5 flex-shrink-0 text-[hsl(var(--muted-foreground)/0.5)]"
+            size={12}
+            className="mt-0.5 flex-shrink-0"
             strokeWidth={2}
+            style={{ color: "hsl(var(--rl-ink-500))" }}
           />
           <div className="min-w-0">
             <p
-              className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+              className="mb-1 text-[10px] font-medium uppercase tracking-[0.12em]"
               style={{
                 fontFamily: "'JetBrains Mono', monospace",
-                color: "hsl(var(--muted-foreground))",
+                color:      "hsl(var(--rl-ink-500))",
               }}
             >
               {incident.incident_number}
             </p>
-            <p className="line-clamp-2 text-sm font-medium leading-snug text-[hsl(var(--foreground))]">
+            <p
+              className="line-clamp-2 text-sm font-medium leading-snug"
+              style={{ color: "hsl(var(--rl-ink-200))" }}
+            >
               {incident.short_description}
             </p>
           </div>
         </div>
 
-        {/* Score badge */}
         <div
           className="flex-shrink-0 rounded-lg border px-2.5 py-1 text-xs font-semibold"
-          style={{
-            background: scoreStyle.bg,
-            color: scoreStyle.text,
-            borderColor: scoreStyle.border,
-          }}
+          style={scoreStyle}
         >
           {scorePercent}%
         </div>
@@ -95,43 +82,38 @@ export function IncidentCard({ incident }: IncidentCardProps) {
 
       {/* Metadata */}
       <div
-        className="mt-3.5 grid grid-cols-3 gap-3 border-t pt-3.5"
-        style={{ borderColor: "hsl(var(--border-subtle))" }}
+        className="mt-3.5 grid grid-cols-3 gap-3 pt-3.5"
+        style={{ borderTop: "1px solid hsl(var(--rl-ink-800))" }}
       >
-        <div>
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground)/0.5)]">
-            Category
-          </p>
-          <p className="text-xs text-[hsl(var(--foreground)/0.8)]">{incident.category}</p>
-        </div>
-        <div>
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground)/0.5)]">
-            Priority
-          </p>
-          <p className="text-xs font-medium" style={{ color: priorityColor }}>
-            {incident.priority}
-          </p>
-        </div>
-        <div>
-          <p className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[hsl(var(--muted-foreground)/0.5)]">
-            Assigned To
-          </p>
-          <p className="truncate text-xs text-[hsl(var(--foreground)/0.8)]">
-            {incident.assignment_group}
-          </p>
-        </div>
+        {[
+          { label: "Category",    value: incident.category,         color: "hsl(var(--rl-ink-300))" },
+          { label: "Priority",    value: incident.priority,         color: priorityColor },
+          { label: "Assigned To", value: incident.assignment_group, color: "hsl(var(--rl-ink-300))" },
+        ].map(({ label, value, color }) => (
+          <div key={label}>
+            <p
+              className="mb-1 text-[9px] font-semibold uppercase tracking-[0.12em]"
+              style={{ color: "hsl(var(--rl-ink-600))" }}
+            >
+              {label}
+            </p>
+            <p className="truncate text-xs font-medium" style={{ color }}>
+              {value}
+            </p>
+          </div>
+        ))}
       </div>
 
       {/* Resolution notes */}
       {incident.resolution_notes && (
         <div
-          className="mt-3 border-t pt-3"
-          style={{ borderColor: "hsl(var(--border-subtle))" }}
+          className="mt-3 pt-3"
+          style={{ borderTop: "1px solid hsl(var(--rl-ink-800))" }}
         >
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-1.5 text-[11px] font-semibold transition-colors"
-            style={{ color: "hsl(var(--accent-violet))" }}
+            style={{ color: "hsl(var(--rl-gold-400))" }}
           >
             <ChevronDown
               size={13}
@@ -143,9 +125,12 @@ export function IncidentCard({ incident }: IncidentCardProps) {
           {isExpanded && (
             <div
               className="mt-2.5 animate-fade-up rounded-lg p-3"
-              style={{ background: "hsl(var(--surface-0))" }}
+              style={{ background: "hsl(var(--rl-ink-950))" }}
             >
-              <p className="whitespace-pre-wrap text-xs leading-relaxed text-[hsl(var(--muted-foreground))]">
+              <p
+                className="whitespace-pre-wrap text-xs leading-relaxed"
+                style={{ color: "hsl(var(--rl-ink-400))" }}
+              >
                 {incident.resolution_notes}
               </p>
             </div>
