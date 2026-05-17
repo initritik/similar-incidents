@@ -149,7 +149,7 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* ── Toolbar ── */}
       <div
-        className="flex items-center justify-between pl-12 pr-4 sm:pl-14 sm:pr-6 lg:px-12 py-3.5"
+        className="flex items-center h-16 justify-between pl-12 pr-4 sm:pl-14 sm:pr-6 lg:px-12 py-3.5"
         style={{
           borderBottom:   "1px solid hsl(var(--rl-ink-800))",
           background:     "hsl(var(--rl-ink-950) / 0.85)",
@@ -157,7 +157,7 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
         }}
       >
         <div className="flex items-center gap-2.5">
-          <div
+          {/* <div
             className="h-1.5 w-1.5 rounded-full"
             style={{
               background: "hsl(var(--rl-gold-400))",
@@ -169,7 +169,7 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
             style={{ color: "hsl(var(--rl-ink-400))" }}
           >
             Conversation
-          </p>
+          </p> */}
         </div>
 
         <button

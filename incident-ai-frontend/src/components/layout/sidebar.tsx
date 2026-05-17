@@ -120,7 +120,7 @@ export function Sidebar({
             </p>
           </div>
 
-          {/* Collapse button inside sidebar */}
+          {/* Collapse button inside sidebar
           <button
             onClick={onCollapse}
             className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-lg transition-colors"
@@ -136,7 +136,7 @@ export function Sidebar({
             title="Collapse sidebar"
           >
             <X size={14} strokeWidth={2} />
-          </button>
+          </button> */}
         </div>
 
         {/* New Chat CTA */}

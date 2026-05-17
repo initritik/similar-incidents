@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import type { ChatSession } from "@/lib/chatStorage";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -62,9 +63,10 @@ export function AppLayout({
       {/* Main content */}
       <main className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Toggle button — always visible */}
+        
         <button
           onClick={onToggleSidebar}
-          className="absolute top-3 left-3 z-40 flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 lg:top-3.5"
+          className={cn("absolute top-6 z-40 flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-150 ", sidebarCollapsed ? "left-4" : "left-[200px]")}
           style={{
             background: "hsl(var(--rl-ink-900))",
             border: "1px solid hsl(var(--rl-ink-700))",
