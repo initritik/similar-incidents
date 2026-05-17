@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChatContainer } from "@/components/chat/ChatContainer";
 import { ChatInput } from "@/components/chat/ChatInput";
 import type { ChatMessageProps } from "@/components/chat/ChatMessage";
@@ -22,7 +22,6 @@ interface ChatPageProps {
   onSessionUpdated?: () => void;
 }
 
-// Helper to render assistant message content as JSX
 function AssistantContent({
   answerText,
   incidents,
@@ -45,7 +44,6 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
   const [assistantResponses, setAssistantResponses] = useState<AssistantResponse[]>([]);
   const [isLoading,          setIsLoading]          = useState(false);
 
-  // Load messages whenever sessionId changes (new chat or history navigation)
   useEffect(() => {
     const stored = loadMessagesFromSession(sessionId);
     if (stored.length === 0) {
@@ -86,7 +84,7 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
     onSessionUpdated?.();
   };
 
-  const handleSendMessage = async (userMessage: string) => {
+  const handleSendMessage = useCallback(async (userMessage: string) => {
     const userMsg: ChatMessageProps = { role: "user", content: userMessage };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
@@ -111,13 +109,12 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
         ),
       };
 
-      const updatedMessages   = [...newMessages, assistantMessage];
-      const updatedResponses  = [...assistantResponses, responseData];
+      const updatedMessages  = [...newMessages, assistantMessage];
+      const updatedResponses = [...assistantResponses, responseData];
 
       setMessages(updatedMessages);
       setAssistantResponses(updatedResponses);
 
-      // Persist to this session
       saveMessagesToSession(sessionId, updatedMessages, updatedResponses);
       onSessionUpdated?.();
     } catch (err) {
@@ -146,21 +143,20 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [messages, assistantResponses, sessionId, onSessionUpdated]);
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* ── Toolbar ── */}
       <div
-        className="flex items-center justify-between px-6 py-3.5 lg:px-12"
+        className="flex items-center justify-between pl-12 pr-4 sm:pl-14 sm:pr-6 lg:px-12 py-3.5"
         style={{
-          borderBottom:  "1px solid hsl(var(--rl-ink-800))",
-          background:    "hsl(var(--rl-ink-950) / 0.85)",
+          borderBottom:   "1px solid hsl(var(--rl-ink-800))",
+          background:     "hsl(var(--rl-ink-950) / 0.85)",
           backdropFilter: "blur(8px)",
         }}
       >
         <div className="flex items-center gap-2.5">
-          {/* Gold dot indicator */}
           <div
             className="h-1.5 w-1.5 rounded-full"
             style={{
@@ -191,7 +187,8 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-            (e.currentTarget as HTMLButtonElement).style.color = "hsl(var(--rl-ink-500))";
+            (e.currentTarget as HTMLButtonElement).style.color =
+              "hsl(var(--rl-ink-500))";
           }}
         >
           <Trash2 size={12} strokeWidth={2} />
@@ -200,7 +197,11 @@ export function ChatPage({ sessionId, onSessionUpdated }: ChatPageProps) {
       </div>
 
       {/* ── Messages ── */}
-      <ChatContainer messages={messages} isLoading={isLoading} />
+      <ChatContainer
+        messages={messages}
+        isLoading={isLoading}
+        onSuggestionClick={handleSendMessage}
+      />
 
       {/* ── Input ── */}
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />

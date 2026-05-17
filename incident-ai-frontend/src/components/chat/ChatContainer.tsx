@@ -4,18 +4,23 @@ import { ChatMessage } from "./ChatMessage";
 import { Search, AlertCircle, Shield, Wifi } from "lucide-react";
 
 export interface ChatContainerProps {
-  messages:  ChatMessageProps[];
-  isLoading?: boolean;
+  messages:            ChatMessageProps[];
+  isLoading?:          boolean;
+  onSuggestionClick?:  (label: string) => void;
 }
 
 const SUGGESTIONS = [
-  { icon: Wifi,         label: "VPN authentication failures",   sub: "Find similar VPN incidents" },
-  { icon: AlertCircle,  label: "Email delivery problems",        sub: "Explore email incidents" },
-  { icon: Search,       label: "Database connection timeout",    sub: "Trace outage patterns" },
-  { icon: Shield,       label: "SSL certificate errors",         sub: "Certificate-related issues" },
+  { icon: Wifi,        label: "VPN authentication failures",  sub: "Find similar VPN incidents" },
+  { icon: AlertCircle, label: "Email delivery problems",       sub: "Explore email incidents" },
+  { icon: Search,      label: "Database connection timeout",   sub: "Trace outage patterns" },
+  { icon: Shield,      label: "SSL certificate errors",        sub: "Certificate-related issues" },
 ];
 
-export function ChatContainer({ messages, isLoading = false }: ChatContainerProps) {
+export function ChatContainer({
+  messages,
+  isLoading = false,
+  onSuggestionClick,
+}: ChatContainerProps) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,19 +29,18 @@ export function ChatContainer({ messages, isLoading = false }: ChatContainerProp
 
   return (
     <div
-      className="flex flex-1 flex-col overflow-y-auto px-6 py-8 lg:px-12"
+      className="flex flex-1 flex-col overflow-y-auto px-4 py-6 sm:px-6 lg:px-12 lg:py-8"
       style={{ background: "hsl(var(--rl-ink-950))" }}
     >
       {/* ── Empty state ── */}
       {messages.length === 0 && !isLoading && (
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-2xl space-y-8 text-center">
+          <div className="w-full max-w-2xl space-y-6 sm:space-y-8 text-center px-2">
 
-            {/* Hero wordmark */}
-            <div className="flex flex-col items-center gap-5">
-              {/* Crest */}
+            {/* Hero crest */}
+            <div className="flex flex-col items-center gap-4 sm:gap-5">
               <div
-                className="flex h-16 w-16 items-center justify-center rounded-2xl"
+                className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl"
                 style={{
                   background:
                     "linear-gradient(145deg, hsl(var(--rl-purple-950)) 0%, hsl(var(--rl-purple-800)) 100%)",
@@ -62,10 +66,10 @@ export function ChatContainer({ messages, isLoading = false }: ChatContainerProp
                 <h2
                   className="tracking-tight"
                   style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize:   "26px",
-                    fontWeight: 500,
-                    color:      "hsl(var(--rl-ink-100))",
+                    fontFamily:    "'Playfair Display', serif",
+                    fontSize:      "clamp(20px, 5vw, 26px)",
+                    fontWeight:    500,
+                    color:         "hsl(var(--rl-ink-100))",
                     letterSpacing: "-0.02em",
                   }}
                 >
@@ -98,19 +102,21 @@ export function ChatContainer({ messages, isLoading = false }: ChatContainerProp
               <div className="flex-1" style={{ borderTop: "1px solid hsl(var(--rl-ink-800))" }} />
             </div>
 
-            {/* Suggestion grid */}
-            <div className="grid gap-3 sm:grid-cols-2">
+            {/* Clickable suggestion grid */}
+            <div className="grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-2">
               {SUGGESTIONS.map(({ icon: Icon, label, sub }, i) => (
                 <button
                   key={i}
-                  className="group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-200"
+                  onClick={() => onSuggestionClick?.(label)}
+                  className="group relative overflow-hidden rounded-xl p-3.5 sm:p-4 text-left transition-all duration-200 active:scale-[0.98]"
                   style={{
-                    background:  "hsl(var(--rl-ink-900))",
-                    border:      "1px solid hsl(var(--rl-ink-800))",
+                    background: "hsl(var(--rl-ink-900))",
+                    border:     "1px solid hsl(var(--rl-ink-800))",
+                    cursor:     "pointer",
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLButtonElement).style.borderColor =
-                      "hsl(var(--rl-gold-400) / 0.3)";
+                      "hsl(var(--rl-gold-400) / 0.4)";
                     (e.currentTarget as HTMLButtonElement).style.background =
                       "hsl(var(--rl-ink-800))";
                   }}
@@ -129,8 +135,8 @@ export function ChatContainer({ messages, isLoading = false }: ChatContainerProp
                       <Icon size={13} strokeWidth={2}
                         style={{ color: "hsl(var(--rl-gold-400))" }} />
                     </div>
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: "hsl(var(--rl-ink-200))" }}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: "hsl(var(--rl-ink-200))" }}>
                         &ldquo;{label}&rdquo;
                       </p>
                       <p className="mt-0.5 text-xs" style={{ color: "hsl(var(--rl-ink-500))" }}>
@@ -147,16 +153,16 @@ export function ChatContainer({ messages, isLoading = false }: ChatContainerProp
 
       {/* ── Messages ── */}
       {messages.length > 0 && (
-        <div className="space-y-7">
+        <div className="space-y-6 sm:space-y-7">
           {messages.map((msg, i) => (
             <ChatMessage key={i} role={msg.role} content={msg.content} />
           ))}
         </div>
       )}
 
-      {/* ── Loading ── */}
+      {/* ── Loading indicator ── */}
       {isLoading && (
-        <div className="mt-7 flex animate-fade-up items-start gap-3">
+        <div className="mt-6 sm:mt-7 flex animate-fade-up items-start gap-3">
           <div
             className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
             style={{

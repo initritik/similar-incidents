@@ -3,7 +3,6 @@ import { AppLayout } from "@/layouts/app-layout";
 import { ChatPage } from "@/pages/chat-page";
 import {
   createNewSession,
-  getActiveSessionId,
   getAllSessions,
   deleteSession,
   type ChatSession,
@@ -12,13 +11,13 @@ import {
 export default function App() {
   const [activeSessionId, setActiveSessionId] = useState<string>("");
   const [sessions, setSessions] = useState<Omit<ChatSession, "messages">[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // On first load, always start a new session (tab = new chat)
+  // On every page load (including browser refresh), always start a FRESH new
+  // session. The previous session was already persisted to localStorage, so it
+  // will appear in the chat history sidebar automatically.
   useEffect(() => {
-    let id = getActiveSessionId();
-    if (!id) {
-      id = createNewSession();
-    }
+    const id = createNewSession();
     setActiveSessionId(id);
     setSessions(getAllSessions());
   }, []);
@@ -30,27 +29,25 @@ export default function App() {
   }, []);
 
   const handleSelectSession = useCallback((id: string) => {
-    // Import setActiveSessionId from storage to persist tab-scope
-    import("@/lib/chatStorage").then(({ setActiveSessionId: persist }) => {
-      persist(id);
-    });
     setActiveSessionId(id);
     setSessions(getAllSessions());
   }, []);
 
-  const handleDeleteSession = useCallback((id: string) => {
-    deleteSession(id);
-    const remaining = getAllSessions();
-    setSessions(remaining);
-    // If we deleted the active session, open a new one
-    if (id === activeSessionId) {
-      if (remaining.length > 0) {
-        handleSelectSession(remaining[0].id);
-      } else {
-        handleNewChat();
+  const handleDeleteSession = useCallback(
+    (id: string) => {
+      deleteSession(id);
+      const remaining = getAllSessions();
+      setSessions(remaining);
+      if (id === activeSessionId) {
+        if (remaining.length > 0) {
+          handleSelectSession(remaining[0].id);
+        } else {
+          handleNewChat();
+        }
       }
-    }
-  }, [activeSessionId, handleNewChat, handleSelectSession]);
+    },
+    [activeSessionId, handleNewChat, handleSelectSession]
+  );
 
   const refreshSessions = useCallback(() => {
     setSessions(getAllSessions());
@@ -65,6 +62,8 @@ export default function App() {
       onNewChat={handleNewChat}
       onSelectSession={handleSelectSession}
       onDeleteSession={handleDeleteSession}
+      sidebarCollapsed={sidebarCollapsed}
+      onToggleSidebar={() => setSidebarCollapsed((c) => !c)}
     >
       <ChatPage
         key={activeSessionId}

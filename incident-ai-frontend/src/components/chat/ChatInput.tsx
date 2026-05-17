@@ -3,7 +3,7 @@ import { ArrowUp, Loader2 } from "lucide-react";
 
 export interface ChatInputProps {
   onSendMessage: (message: string) => void;
-  isLoading?: boolean;
+  isLoading?:    boolean;
 }
 
 export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) {
@@ -29,18 +29,18 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
 
   return (
     <div
-      className="px-6 py-5 lg:px-12"
+      className="px-4 py-4 sm:px-6 sm:py-5 lg:px-12"
       style={{
-        background:  "hsl(var(--rl-ink-950))",
-        borderTop:   "1px solid hsl(var(--rl-ink-800))",
+        background: "hsl(var(--rl-ink-950))",
+        borderTop:  "1px solid hsl(var(--rl-ink-800))",
       }}
     >
       <form onSubmit={handleSubmit} className="mx-auto max-w-3xl">
         <div
           className="relative rounded-2xl transition-all duration-200"
           style={{
-            background:  "hsl(var(--rl-ink-900))",
-            border:      isFocused
+            background: "hsl(var(--rl-ink-900))",
+            border:     isFocused
               ? "1px solid hsl(var(--rl-gold-400) / 0.45)"
               : "1px solid hsl(var(--rl-ink-700))",
             boxShadow: isFocused
@@ -63,7 +63,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
             className="w-full resize-none bg-transparent px-4 pt-4 pb-12 text-sm leading-relaxed outline-none disabled:opacity-50"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              color:       "hsl(var(--rl-ink-100))",
+              color:      "hsl(var(--rl-ink-100))",
             }}
             rows={3}
           />
@@ -71,10 +71,16 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
           {/* Bottom row */}
           <div className="absolute bottom-3 left-4 right-3 flex items-center justify-between">
             <p
-              className="text-[11px]"
+              className="text-[10px] hidden sm:block"
               style={{ color: "hsl(var(--rl-ink-600))" }}
             >
               Enter to send · Shift+Enter for newline
+            </p>
+            <p
+              className="text-[10px] sm:hidden"
+              style={{ color: "hsl(var(--rl-ink-600))" }}
+            >
+              Tap ↑ to send
             </p>
 
             <button
@@ -113,7 +119,7 @@ export function ChatInput({ onSendMessage, isLoading = false }: ChatInputProps) 
           className="mt-2.5 text-center text-[10px]"
           style={{ color: "hsl(var(--rl-ink-600))" }}
         >
-          Royal London · Incident AI  ·  Responses are AI-generated and for guidance only
+          Royal London · Incident AI · Responses are AI-generated and for guidance only
         </p>
       </form>
     </div>
